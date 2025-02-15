@@ -27,12 +27,15 @@ cd TrashTracker
 ### 2️⃣ Install Required Libraries
 Ensure you have the following Arduino libraries installed:
 - `MFRC522` (for RFID communication)
+- `SPI` (for ESP32 <-> RFID reader communication)
 - `WiFi` (for internet connectivity)
+- `esp_eap_client`(for wpa2 enterprise authentication)
 - `HTTPClient` (for sending data to Google Sheets)
 - `LiquidCrystal_I2C` (for LCD display)
 
-### 3️⃣ Configure WiFi Credentials
-Create a **`WiFiCredentials.h`** file and add your network credentials:
+
+### 3️⃣ Configure User Credentials
+Create a **`user_redentials.h`** file and add your network credentials:
 ```cpp
 #ifndef USER_CREDENTIALS_H
 #define USER_CREDENTALS_H
@@ -41,11 +44,24 @@ const char *eap_username = "YOUR_USERNAME"; //wpa2 enterprise username
 const char *eap_identity = "YOUR_IDENTITY"; //wpa2 enterprise identity
 const char *eap_password = "YOUR_PASSWORD"; //wpa2 enterprise password
 const char* password = "YOUR_PASSWORD";     //wpa3 personal password
+const char* googleScriptURL = "https://script.google.com/macros/s/URL/exec";
 
 #endif
 ```
 
-### 4️⃣ Upload Code to ESP32
+### 4️⃣ Deploy Google Apps Script
+1. Open **Google Sheets** and create a new spreadsheet.
+2. Rename the first sheet to **`Sheet1`**.
+3. Click **Extensions -> Apps Script**.
+4. Delete any default content and **paste the Google Apps Script**.
+5. Click the **Save** icon.
+6. Click **Deploy -> New Deployment**.
+7. Under **Select Type**, choose **Web app**.
+8. Set **Who has access** to **Anyone**.
+9. Click **Deploy**, then **Authorize** the script when prompted.
+10. Copy the **Web App URL** and replace it in `UserCredentials.h` for ESP32 to send data.
+
+### 5️⃣ Upload Code to ESP32
 - Open the project in **Arduino IDE**.
 - Select **ESP32 Dev Module** in `Tools -> Board`.
 - Upload `main.ino` to the ESP32.
@@ -54,15 +70,42 @@ const char* password = "YOUR_PASSWORD";     //wpa3 personal password
 ```
 /TrashTracker
 │── main.ino
-│── ButtonHandler.h/.cpp
-│── RFIDHandler.h/.cpp
-│── WiFiHandler.h/.cpp
-│── LCDHandler.h/.cpp
-│── SheetsHandler.h/.cpp
-│── RGBLedHandler.h/.cpp
-│── user_credentials.h (Ignored in .gitignore)
+│── /handlers
+│   │── ButtonHandler.h/.cpp
+│   │── RFIDHandler.h/.cpp
+│   │── WiFiHandler.h/.cpp
+│   │── LCDHandler.h/.cpp
+│   │── SheetsHandler.h/.cpp
+│   │── RGBLedHandler.h/.cpp
+│── /config
+│   │── user_credentials.h (Ignored in .gitignore)
+│   │── ca_cert.h
 │── README.md
 │── .gitignore
+```
+
+## 📝 Google Apps Script (GoogleScript.gs)
+This script handles requests from the ESP32 to log RFID data into Google Sheets.
+```javascript
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");  
+  var uid = e.parameter.uid;
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] == uid) {
+      if (data[i][1] !== "") {
+        return ContentService.createTextOutput(data[i][1]);  // Return the associated name
+      } else {
+        return ContentService.createTextOutput("Unknown/Unassigned"); // UID exists but no name assigned
+      }
+    }
+  }
+
+  // If UID does not exist, add it to the sheet and return a message
+  sheet.appendRow([uid, ""]);
+  return ContentService.createTextOutput("New Tag - Added");
+}
 ```
 
 ## 🎯 Usage
