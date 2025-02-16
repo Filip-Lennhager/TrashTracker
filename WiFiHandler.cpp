@@ -1,6 +1,5 @@
-#include "handlers/WiFiHandler.h"
-#include "config/user_credentials.h"
-//#include "config/ca_cert.h"
+#include "WiFiHandler.h"
+#include "user_credentials.h"
 
 int counter = 0;
 

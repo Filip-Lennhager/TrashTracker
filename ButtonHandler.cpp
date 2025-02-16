@@ -1,4 +1,4 @@
-#include "handlers/ButtonHandler.h"
+#include "ButtonHandler.h"
 
 volatile unsigned long lastPress1 = 0;
 volatile unsigned long lastPress2 = 0;

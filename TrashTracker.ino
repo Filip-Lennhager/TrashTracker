@@ -1,11 +1,11 @@
 // TrashTracker.ino
 //#include <Arduino.h>
-#include "handlers/ButtonHandler.h" 
-#include "handlers/RFIDHandler.h"
-#include "handlers/WiFiHandler.h" 
-#include "handlers/LCDHandler.h" 
-#include "handlers/SheetsHandler.h"
-#include "handlers/RGBLedHandler.h"
+#include "ButtonHandler.h" 
+#include "RFIDHandler.h"
+#include "WiFiHandler.h" 
+#include "LCDHandler.h" 
+#include "SheetsHandler.h"
+#include "RGBLedHandler.h"
 
 void setup() {
     Serial.begin(115200);
